@@ -2,14 +2,14 @@
 
 > Advanced abstract renderer for Angular
 
-[![Travis CI](https://img.shields.io/travis/gund/ng-dynamic-component/master.svg?maxAge=2592000)](https://travis-ci.org/gund/ng-dynamic-component)
-[![Coverage](https://img.shields.io/codecov/c/github/gund/ng-dynamic-component.svg?maxAge=2592000)](https://codecov.io/gh/gund/ng-dynamic-component)
-[![Code Climate](https://img.shields.io/codeclimate/github/gund/ng-dynamic-component.svg?maxAge=2592000)](https://codeclimate.com/github/gund/ng-dynamic-component)
-[![Npm](https://img.shields.io/npm/v/ng-dynamic-component.svg?maxAge=2592000)](https://badge.fury.io/js/ng-dynamic-component)
-[![Npm Downloads](https://img.shields.io/npm/dt/ng-dynamic-component.svg?maxAge=2592000)](https://www.npmjs.com/package/ng-dynamic-component)
-[![Licence](https://img.shields.io/npm/l/ng-dynamic-component.svg?maxAge=2592000)](https://github.com/gund/ng-dynamic-component/blob/master/LICENSE)
+[![Travis CI](https://img.shields.io/travis/gund/ngx-renderer/master.svg?maxAge=2592000)](https://travis-ci.org/gund/ngx-renderer)
+[![Coverage](https://img.shields.io/codecov/c/github/gund/ngx-renderer.svg?maxAge=2592000)](https://codecov.io/gh/gund/ngx-renderer)
+[![Code Climate](https://img.shields.io/codeclimate/github/gund/ngx-renderer.svg?maxAge=2592000)](https://codeclimate.com/github/gund/ngx-renderer)
+[![Npm](https://img.shields.io/npm/v/ngx-renderer.svg?maxAge=2592000)](https://badge.fury.io/js/ngx-renderer)
+[![Npm Downloads](https://img.shields.io/npm/dt/ngx-renderer.svg?maxAge=2592000)](https://www.npmjs.com/package/ngx-renderer)
+[![Licence](https://img.shields.io/npm/l/ngx-renderer.svg?maxAge=2592000)](https://github.com/gund/ngx-renderer/blob/master/LICENSE)
 [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release)
-[![Greenkeeper badge](https://badges.greenkeeper.io/gund/ng-dynamic-component.svg)](https://greenkeeper.io/)
+[![Greenkeeper badge](https://badges.greenkeeper.io/gund/ngx-renderer.svg)](https://greenkeeper.io/)
 
 ## Installation
 
@@ -21,107 +21,86 @@ Also please make sure you have latest version of `tslib` library
 
 ## Usage
 
-Import `DynamicModule` with dynamic components you want to insert later:
+### Default browser application
+
+Import `AdvancedRendererModule` in your app module:
 ```ts
-import { DynamicModule } from 'ng-dynamic-component';
-import { MyDynamicComponent1, MyDynamicComponent2 } from './my-components';
+import { NgModule } from '@angular/core';
+import { BrowserModule } from '@angular/platform-browser';
+import { AdvancedRendererModule } from 'ngx-renderer';
 
 @NgModule({
   imports: [
-    DynamicModule.withComponents([MyDynamicComponent1, MyDynamicComponent2])
+    BrowserModule,
+    AdvancedRendererModule,
   ]
 })
+export class AppModule { }
 ```
 
-Then in your component's template include `<ndc-dynamic>` where you want to render component
-and bind from your component class type of component to render:
+Then in your component/directive/service inject `AdvancedRenderer` and use it:
 ```ts
-@Component({
-  selector: 'my-component',
-  template: `<ndc-dynamic [ndcDynamicComponent]="component"></ndc-dynamic>`
-})
-class MyComponent {
-  component = Math.random() > 0.5 ? MyDynamicComponent1 : MyDynamicComponent2;
-}
-```
+import { Component, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { AdvancedRenderer, AdvancedRendererMethod, elementExpression } from 'ngx-renderer';
 
-You can also pass `inputs` and `outputs` to your dynamic components:
-```ts
 @Component({
   selector: 'my-component',
-  template: `<ndc-dynamic [ndcDynamicComponent]="component"
-                          [ndcDynamicInputs]="inputs"
-                          [ndcDynamicOutputs]="outputs"
-                          ></ndc-dynamic>`
+  template: `<input type="text" #myInput placeholder="This will have auto-focus">`
 })
-class MyComponent {
-  component = MyDynamicComponent1;
-  inputs = {
-    hello: 'world',
-    something: () => 'can be really complex'
-  };
-  outputs = {
-    onSomething: (type) => alert(type)
+class MyComponent implements AfterViewInit {
+  @ViewChild('myInput') myInput: ElementRef;
+
+  constructor(private renderer: AdvancedRenderer) { }
+
+  ngAfterViewInit() {
+    // This will be safely executed on Browser UI thread (or ignored if not available)
+    this.renderer.execute('input.focus()', { input: elementExpression(this.myInput) })
+      .then(() => console.log('Input got focus! Yay!!'));
   }
 }
-
-@Component({selector: 'my-dynamic-component1', template: 'Dynamic Component 1'})
-class MyDynamicComponent1 {
-  @Input() hello: string;
-  @Input() something: Function;
-  @Output() onSomething = new EventEmitter<string>();
-}
 ```
-Here you can update your inputs (ex. `inputs.hello = 'WORLD'`) and they will trigger standard Angular's life-cycle hooks
-(of course you should consider which change detection strategy you are using).
 
+### Browser + Webworker application
 
-You can also use [`NgComponentOutlet`](https://angular.io/docs/ts/latest/api/common/index/NgComponentOutlet-directive.html)
-directive from `@angular/common` instead of `<ndc-dynamic>` and apply `inputs` and `outputs` to your dynamic components:
+All you need to do is update your AppModule. Your application logic code remains untouched!
+
+Here is the change in your `AppModule` which now runs on Webworker thread:
 ```ts
-@Component({
-  selector: 'my-component',
-  template: `<ng-container [ngComponentOutlet]="component"
-                           [ndcDynamicInputs]="inputs"
-                           [ndcDynamicOutputs]="outputs"
-                           ></ng-container>`
+import { NgModule } from '@angular/core';
+import { WorkerAppModule } from '@angular/platform-webworker';
+import { AdvancedRendererWorkerModule } from 'ngx-renderer';
+
+@NgModule({
+  imports: [
+    WorkerAppModule,
+    AdvancedRendererWorkerModule,
+  ]
 })
-class MyComponent {
-  component = MyDynamicComponent1;
-  inputs = {...};
-  outputs = {...}
-}
+export class AppInWorkerModule { }
 ```
 
-Also you can use `ngComponentOutlet` with `*` syntax:
+And here is the change on UI bootstrapping code:
 ```ts
-@Component({
-  selector: 'my-component',
-  template: `<ng-container *ngComponentOutlet="component;
-                            ndcDynamicInputs: inputs;
-                            ndcDynamicOutputs: outputs"
-                            ></ng-container>`
-})
-class MyComponent {
-  component = MyDynamicComponent1;
-  inputs = {...};
-  outputs = {...}
-}
+import { bootstrapWorkerUi } from '@angular/platform-webworker';
+import { ADVANCED_RENDERER_UI_PROVIDERS } from 'ngx-renderer';
+
+bootstrapWorkerUi('app-worker.js', ADVANCED_RENDERER_UI_PROVIDERS);
 ```
 
-You can have more advanced stuff over your dynamically rendered components like setting custom injector (`[ndcDynamicInjector]`)
-or providing additional/overriding providers (`[ndcDynamicProviders]`) or both simultaneously
-or projecting nodes (`[ndcDynamicContent]`).
+### Server-side application
 
-NOTE: In practice funtionality of this library is splitted in two pieces:
-* one - component (`ndc-dynamic`) that is responsible for instantianting and rendering of dynamic components;
-* two - directive (`ndcDynamic` also bound to `ndc-dynamic`) that is responsible for carrying inputs/outputs
-to/from dynamic component by the help of so called `ComponentInjector` (it is `ndc-dynamic` by default).
+If you want to run your application on the server again just update your `AppModule`:
+```ts
+import { NgModule } from '@angular/core';
+import { AdvancedRendererNoopModule } from 'ngx-renderer';
 
-Thanks to this separation you are able to connect inputs/outputs and life-cycle hooks to different mechanisms of injecting
-dynamic components by implementing `ComponentInjector` and providing it via `DynamicModule.withComponents(null, [here])` in second argument.
-
-It was done to be able to reuse [`NgComponentOutlet`](https://github.com/angular/angular/commit/8578682) added in Angular 4-beta.3.
+@NgModule({
+  imports: [
+    AdvancedRendererNoopModule,
+  ]
+})
+export class AppInWorkerModule { }
+```
 
 ## License
 
