@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { SerializerTypes, ServiceMessageBrokerFactory } from '@angular/platform-webworker';
 import { Serializer } from '@angular/platform-webworker/src/web_workers/shared/serializer';
 
-import { AdvancedRenderer } from '../../advanced-renderer';
+import { AdvancedRenderer, AdvancedRendererMethod } from '../../advanced-renderer';
 import { AllExpressions, isElementExpression } from '../../expression';
 import { RENDERER_CALL_TASK, RENDERER_CHANNEL } from '../shared/advanced-renderer';
 
@@ -24,8 +24,8 @@ export class AdvancedRendererUi {
       SerializerTypes.PRIMITIVE);
   }
 
-  private _callTask(task: string, args: any[]): any {
-    return this.renderer[task](...this._deserializeArgs(args));
+  private _callTask(task: AdvancedRendererMethod, args: any[]): any {
+    return this.renderer.getMethod(task)(...this._deserializeArgs(args));
   }
 
   private _deserializeArgs(arg: AllExpressions | any): any {

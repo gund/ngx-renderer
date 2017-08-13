@@ -1,6 +1,6 @@
 import { Injectable, Provider } from '@angular/core/core';
 
-import { AdvancedRenderer, AdvancedRendererMethod } from '../advanced-renderer';
+import { AdvancedRenderer, AdvancedRendererMethod, RendererGlobalTarget } from '../advanced-renderer';
 import {
   AllExpressions,
   ExpressionArguments,
@@ -11,11 +11,27 @@ import {
 } from '../expression';
 
 @Injectable()
-export class AdvancedRendererImpl implements AdvancedRenderer {
+export class AdvancedRendererImpl extends AdvancedRenderer {
   execute(expression: string, args?: ExpressionArguments): Promise<any> {
     const { argNames, argsResolved } = this._resolveArgs(args);
     const fn = new Function(argNames.join(','), expression);
     return Promise.resolve().then(() => fn(...argsResolved));
+  }
+
+  invokeElementMethod(element: any, method: string, args: any[]): Promise<any> {
+    return this.execute(`return element.${method}.apply(element, args)`, { element, args });
+  }
+
+  invokeGlobalTargetMethod(target: RendererGlobalTarget, method: string, args: any[]): Promise<any> {
+    return this.execute(`return ${target}.${method}.apply(${target}, args)`, { args });
+  }
+
+  setGlobalTargetPropery(target: RendererGlobalTarget, prop: string, value: any): void {
+    this.execute(`${target}.${prop} = value`, { value });
+  }
+
+  getGlobalTargetProperty(target: RendererGlobalTarget, prop: string): Promise<any> {
+    return this.execute(`return ${target}.${prop}`);
   }
 
   private _resolveArgs(args: ExpressionArguments = {}) {
@@ -34,8 +50,7 @@ export class AdvancedRendererImpl implements AdvancedRenderer {
         return expr.value;
       }
       if (isCallExpression(expr)) {
-        const method = AdvancedRendererMethod[expr.method];
-        return this[method](...this._resolveArgsArray(expr.args));
+        return this.getMethod(expr.method)(...this._resolveArgsArray(expr.args));
       }
       throw Error(`Unknown expression type '${expr.__expr_type}'`);
     } else {
