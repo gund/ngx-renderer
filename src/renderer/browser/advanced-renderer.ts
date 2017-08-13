@@ -1,4 +1,4 @@
-import { Injectable, Provider } from '@angular/core/core';
+import { Injectable, Provider } from '@angular/core';
 
 import { AdvancedRenderer, AdvancedRendererMethod, RendererGlobalTarget } from '../advanced-renderer';
 import {
