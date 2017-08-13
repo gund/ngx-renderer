@@ -9,6 +9,7 @@
   "scripts": {
     "commit": "git-cz",
     "build": "node scripts/build.js",
+    "release": "node scripts/release.js",
     "pretest": "npm run cleancoverage",
     "test": "karma start",
     "pretest:once": "npm run cleancoverage",
@@ -52,6 +53,7 @@
     "codecov": "^2.1.0",
     "codelyzer": "^3.1.2",
     "commitizen": "^2.9.6",
+    "copyfiles": "^1.2.0",
     "cz-conventional-changelog": "^2.0.0",
     "istanbul": "^0.4.5",
     "jasmine-core": "^2.5.2",
@@ -66,6 +68,7 @@
     "karma-remap-istanbul": "^0.6.0",
     "karma-sourcemap-loader": "^0.3.7",
     "karma-webpack": "^2.0.2",
+    "ncp": "^2.0.0",
     "npm-run-all": "^4.0.2",
     "raw-loader": "^0.5.1",
     "rimraf": "^2.6.1",
