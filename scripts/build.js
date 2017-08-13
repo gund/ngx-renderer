@@ -1,7 +1,7 @@
 const fs = require('fs')
 const exec = require('child_process').exec
 
-const NODE_BIN = `node_modules/.bin`;
+const NODE_BIN = `node_modules/.bin`
 
 const NGC = `"${NODE_BIN}/ngc"`
 const TSC = `"${NODE_BIN}/tsc"`
